@@ -1,0 +1,599 @@
+@import url("https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=Space+Mono:wght@400;700&display=swap");
+
+:root {
+    color-scheme: dark;
+    --black: #050505;
+    --line: #292929;
+    --white: #f2f2f2;
+    --muted: #8d8d8d;
+    --cyan: #bcece5;
+}
+
+* {
+    box-sizing: border-box;
+}
+
+body {
+    min-height: 100vh;
+    margin: 0;
+    overflow-x: hidden;
+    background: var(--black);
+    color: var(--white);
+    font-family: "Space Mono", monospace;
+}
+
+button,
+select,
+input {
+    font: inherit;
+}
+
+.starfield {
+    position: fixed;
+    z-index: -1;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.34;
+    background-image:
+        radial-gradient(circle, #eee 1px, transparent 1.6px),
+        radial-gradient(circle, #aaa 1px, transparent 1.5px);
+    background-size: 47px 47px, 83px 83px;
+    background-position: 5px 12px, 23px 31px;
+}
+
+.topbar {
+    height: 62px;
+    padding: 0 5vw;
+    display: flex;
+    align-items: center;
+    border-bottom: 1px solid #343434;
+    background: #050505e8;
+}
+
+.brand {
+    color: var(--white);
+    text-decoration: none;
+    font-size: 19px;
+    font-weight: 700;
+    font-style: italic;
+    letter-spacing: 0.12em;
+}
+
+.brand span {
+    margin-left: 8px;
+    color: #aaa;
+    font-size: 10px;
+    font-style: normal;
+    letter-spacing: 0.2em;
+}
+
+.layout {
+    width: min(1280px, 90vw);
+    margin: 0 auto;
+}
+
+.intro {
+    padding: 34px 0 24px;
+}
+
+.eyebrow,
+.section-label,
+.sample-heading,
+.canvas-footer,
+.math-chip,
+.matrix-card-title {
+    margin: 0;
+    color: #aaa;
+    font-family: "DM Mono", monospace;
+    font-size: 9px;
+    letter-spacing: 0.12em;
+}
+
+.intro h1 {
+    margin: 12px 0 0;
+    font-size: clamp(28px, 4vw, 43px);
+    line-height: 1.12;
+    letter-spacing: 0.025em;
+}
+
+.intro h1 span {
+    color: #aaa;
+}
+
+.workbench {
+    display: grid;
+    grid-template-columns: 255px minmax(0, 1fr);
+    gap: 17px;
+    align-items: stretch;
+}
+
+.control-panel,
+.canvas-panel,
+.math-panel {
+    border: 1px solid var(--line);
+    background: #080808ef;
+}
+
+.control-panel {
+    padding: 17px;
+}
+
+.upload-box {
+    min-height: 110px;
+    margin: 12px 0 17px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    border: 1px dashed #555;
+    background: #0d0d0d;
+    text-align: center;
+    cursor: pointer;
+}
+
+.upload-box.dragging {
+    border-color: var(--cyan);
+    background: #121818;
+}
+
+.upload-mark {
+    color: var(--cyan);
+    font-size: 21px;
+}
+
+.upload-box strong {
+    font-size: 11px;
+}
+
+.upload-box > span:last-child {
+    color: var(--muted);
+    font-size: 9px;
+}
+
+.sample-heading {
+    display: flex;
+    justify-content: space-between;
+    font-size: 8px;
+}
+
+.sample-count {
+    color: #777;
+}
+
+.sample-list {
+    max-height: 150px;
+    margin: 8px 0 18px;
+    overflow-y: auto;
+}
+
+.sample-item {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px;
+    border: 1px solid transparent;
+    background: transparent;
+    color: #c9c9c9;
+    text-align: left;
+    font-size: 9px;
+    cursor: pointer;
+}
+
+.sample-item:hover,
+.sample-item.selected {
+    border-color: #444;
+    background: #141414;
+}
+
+.sample-item img {
+    width: 34px;
+    height: 27px;
+    object-fit: cover;
+}
+
+.sample-item span {
+    flex: 1;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+.no-samples {
+    color: var(--muted);
+    font-size: 9px;
+    line-height: 1.7;
+}
+
+.no-samples code {
+    color: var(--white);
+}
+
+.operation-label {
+    padding-top: 14px;
+    border-top: 1px solid var(--line);
+}
+
+.field-label {
+    display: block;
+    margin: 12px 0 7px;
+    color: #c9c9c9;
+    font-size: 9px;
+}
+
+select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid #444;
+    border-radius: 0;
+    outline: none;
+    background: #111;
+    color: var(--white);
+    font-size: 10px;
+}
+
+select:focus {
+    border-color: #aaa;
+}
+
+.brightness-control[hidden] {
+    display: none;
+}
+
+.brightness-control label {
+    display: flex;
+    justify-content: space-between;
+}
+
+#amount {
+    width: 100%;
+    accent-color: #ddd;
+}
+
+#amount-value {
+    color: var(--cyan);
+}
+
+.apply-button,
+.math-button {
+    border: 1px solid #aaa;
+    border-radius: 0;
+    background: transparent;
+    color: var(--white);
+    cursor: pointer;
+    letter-spacing: 0.07em;
+}
+
+.apply-button {
+    width: 100%;
+    margin-top: 17px;
+    padding: 11px 9px;
+    display: flex;
+    justify-content: space-between;
+    font-size: 9px;
+}
+
+.apply-button:hover:not(:disabled),
+.math-button:hover:not(:disabled) {
+    background: #eee;
+    color: #050505;
+}
+
+.apply-button:disabled,
+.math-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.message {
+    min-height: 22px;
+    margin: 9px 0 0;
+    color: var(--muted);
+    font-size: 9px;
+}
+
+.canvas-panel {
+    min-width: 0;
+    padding: 16px;
+}
+
+.canvas-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 13px;
+}
+
+.canvas-header h2,
+.math-header h2 {
+    margin: 5px 0 0;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+.math-button {
+    padding: 9px 11px;
+    white-space: nowrap;
+    font-size: 9px;
+}
+
+.math-button span {
+    margin-right: 6px;
+    color: var(--cyan);
+}
+
+.math-button:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+}
+
+.canvas-frame {
+    position: relative;
+    min-height: 410px;
+    display: grid;
+    place-items: center;
+    overflow: hidden;
+    border: 1px solid #292929;
+    background:
+        linear-gradient(#171717 1px, transparent 1px),
+        linear-gradient(90deg, #171717 1px, transparent 1px),
+        #070707;
+    background-size: 24px 24px;
+}
+
+.canvas-frame img {
+    z-index: 1;
+    display: block;
+    max-width: 100%;
+    max-height: 570px;
+    object-fit: contain;
+}
+
+.canvas-frame img[hidden] {
+    display: none;
+}
+
+.canvas-empty {
+    z-index: 1;
+    color: #858585;
+    text-align: center;
+}
+
+.canvas-empty[hidden] {
+    display: none;
+}
+
+.empty-crosshair {
+    color: #aaa;
+    font-size: 34px;
+}
+
+.canvas-empty p {
+    margin: 9px 0 5px;
+    font-size: 11px;
+}
+
+.canvas-footer {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    padding-top: 11px;
+    color: #858585;
+    font-size: 8px;
+}
+
+.grid-overlay {
+    position: absolute;
+    z-index: 2;
+    inset: 0;
+    opacity: 0;
+    pointer-events: none;
+    background-image:
+        linear-gradient(#d6ffff35 1px, transparent 1px),
+        linear-gradient(90deg, #d6ffff35 1px, transparent 1px);
+    background-size: 32px 32px;
+    transition: opacity 0.2s;
+}
+
+.grid-overlay.visible {
+    opacity: 1;
+}
+
+.canvas-corner {
+    position: absolute;
+    z-index: 3;
+    width: 13px;
+    height: 13px;
+    border-color: #ddd;
+    border-style: solid;
+    opacity: 0.65;
+}
+
+.corner-tl {
+    top: 8px;
+    left: 8px;
+    border-width: 1px 0 0 1px;
+}
+
+.corner-tr {
+    top: 8px;
+    right: 8px;
+    border-width: 1px 1px 0 0;
+}
+
+.corner-bl {
+    bottom: 8px;
+    left: 8px;
+    border-width: 0 0 1px 1px;
+}
+
+.corner-br {
+    right: 8px;
+    bottom: 8px;
+    border-width: 0 1px 1px 0;
+}
+
+.math-panel {
+    display: none;
+    padding: 17px;
+}
+
+.math-panel.open {
+    display: block;
+}
+
+.workbench.math-open {
+    grid-template-columns: minmax(0, 1fr) 380px;
+}
+
+.workbench.math-open .control-panel {
+    display: none;
+}
+
+.math-header {
+    display: flex;
+    justify-content: space-between;
+    padding-bottom: 14px;
+    border-bottom: 1px solid var(--line);
+}
+
+.close-button {
+    align-self: start;
+    border: 1px solid #444;
+    background: transparent;
+    color: #bbb;
+    font-size: 17px;
+    cursor: pointer;
+}
+
+.math-body {
+    padding-top: 19px;
+}
+
+.math-chip {
+    display: inline-block;
+    padding: 5px 7px;
+    border: 1px solid #444;
+    color: var(--cyan);
+    font-size: 8px;
+}
+
+.formula {
+    min-height: 48px;
+    margin: 16px 0 10px;
+    display: flex;
+    align-items: center;
+    color: #f0f0f0;
+    font-family: "DM Mono", monospace;
+    font-size: 12px;
+    line-height: 1.7;
+    overflow-wrap: anywhere;
+}
+
+.math-body > p,
+.comparison-heading > p {
+    color: #999;
+    font-size: 9px;
+    line-height: 1.8;
+}
+
+.matrix-card,
+.matrix-sample {
+    padding: 12px;
+    border: 1px solid #333;
+    background: #0d0d0d;
+}
+
+.matrix-card pre {
+    margin: 12px 0 0;
+    overflow-x: auto;
+    color: #e3e3e3;
+    font: 10px/1.8 "DM Mono", monospace;
+    white-space: pre-wrap;
+}
+
+.comparison-heading {
+    margin-top: 18px;
+}
+
+.comparison-heading > p {
+    margin: 5px 0 8px;
+    font-size: 8px;
+}
+
+.matrix-comparison {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 22px minmax(0, 1fr);
+    align-items: center;
+    gap: 7px;
+}
+
+.matrix-sample {
+    min-width: 0;
+    padding: 10px 8px;
+}
+
+.matrix-sample .matrix-card-title {
+    min-height: 24px;
+    font-size: 8px;
+    text-align: center;
+}
+
+.matrix-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 3px;
+}
+
+.matrix-grid span {
+    padding: 7px 2px;
+    border: 1px solid #292929;
+    color: #ddd;
+    font: 10px "DM Mono", monospace;
+    text-align: center;
+}
+
+#new-matrix span {
+    border-color: #42534f;
+    color: var(--cyan);
+}
+
+.matrix-arrow {
+    color: var(--cyan);
+    text-align: center;
+}
+
+@media (max-width: 1050px) {
+    .workbench.math-open {
+        grid-template-columns: minmax(0, 1fr) 330px;
+    }
+}
+
+@media (max-width: 800px) {
+    .workbench,
+    .workbench.math-open {
+        grid-template-columns: 1fr;
+    }
+
+    .workbench.math-open .math-panel {
+        grid-column: 1;
+    }
+
+    .canvas-frame {
+        min-height: 300px;
+    }
+
+    .layout {
+        width: 92vw;
+    }
+
+    .topbar {
+        padding: 0 4vw;
+    }
+
+    .canvas-footer {
+        flex-direction: column;
+    }
+}

@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Porygon Lab</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="starfield"></div>
+
+    <header class="topbar">
+        <a class="brand" href="/">PORYGON<span>LAB</span></a>
+    </header>
+
+    <main class="layout">
+        <section class="intro">
+            <p class="eyebrow">MATRIX OPERATIONS · IMAGE MANIPULATION</p>
+            <h1>Transform pixels.<br><span>See the mathematics.</span></h1>
+        </section>
+
+        <section class="workbench">
+            <aside class="control-panel">
+                
+                <label class="upload-box" id="drop-zone" for="image-input">
+                    <span class="upload-mark">↑</span>
+                    <strong>Drop an image here</strong>
+                    <span>or click to browse</span>
+                </label>
+                <input id="image-input" type="file" accept="image/*" hidden>
+
+                <div class="sample-heading">
+                    <span>SAMPLE IMAGES</span>
+                    <span class="sample-count">{{ sample_files|length }}</span>
+                </div>
+
+                <div class="sample-list">
+                    {% for filename in sample_files %}
+                    <button
+                        class="sample-item"
+                        data-sample="{{ filename }}"
+                        type="button"
+                    >
+                        <img
+                            src="{{ url_for('sample_image', filename=filename) }}"
+                            alt=""
+                            loading="lazy"
+                        >
+                        <span>{{ filename }}</span>
+                    </button>
+                    {% else %}
+                    <p class="no-samples">
+                        Add images to your <code>samples</code> folder.
+                    </p>
+                    {% endfor %}
+                </div>
+
+                <label class="field-label" for="operation">
+                    Choose a transformation
+                </label>
+                <select id="operation">
+                    <option value="brightness">Brightness</option>
+                    <option value="grayscale">Grayscale</option>
+                    <option value="invert">Invert</option>
+                    <option value="sepia">Sepia</option>
+                    <option value="rotate">Rotate 90°</option>
+                    <option value="flip_horizontal">Flip horizontal</option>
+                    <option value="flip_vertical">Flip vertical</option>
+                </select>
+
+                <div class="brightness-control" id="brightness-control">
+                    <label class="field-label" for="amount">
+                        Brightness <span id="amount-value">+30</span>
+                    </label>
+                    <input id="amount" type="range" min="-100" max="100" value="30">
+                </div>
+
+                <button class="apply-button" id="apply-button" type="button" disabled>
+                    APPLY <span>→</span>
+                </button>
+                <p class="message" id="message">Choose an image to begin.</p>
+            </aside>
+
+            <section class="canvas-panel">
+                <div class="canvas-header">
+                    <div>
+                        <div class="section-label">IMAGE CANVAS</div>
+                        
+                    </div>
+
+                    <button class="math-button" id="math-button" type="button" disabled>
+                        <span>▦</span> SHOW MATH
+                    </button>
+                </div>
+
+                <div class="canvas-frame">
+                    <div class="grid-overlay" id="grid-overlay"></div>
+
+                    <div class="canvas-empty" id="canvas-empty">
+                        <div class="empty-crosshair">＋</div>
+                        <p>Your image will appear here</p>
+                    </div>
+
+                    <img id="image-preview" alt="Image preview" hidden>
+
+                    <div class="canvas-corner corner-tl"></div>
+                    <div class="canvas-corner corner-tr"></div>
+                    <div class="canvas-corner corner-bl"></div>
+                    <div class="canvas-corner corner-br"></div>
+                </div>
+
+                <div class="canvas-footer">
+                    <span id="image-info">NO IMAGE</span>
+                    <span id="operation-info">READY</span>
+                </div>
+            </section>
+
+            <aside class="math-panel" id="math-panel">
+                <div class="math-header">
+                    <div>
+                        <div class="section-label">MATH VIEW</div>
+                        <h2 id="math-title">Operation details</h2>
+                    </div>
+                    <button
+                        id="close-math"
+                        class="close-button"
+                        type="button"
+                        aria-label="Close math view"
+                    >×</button>
+                </div>
+
+                <div class="math-body">
+                    <span class="math-chip" id="math-operation">MATRIX OPERATION</span>
+
+                    <div class="formula" id="math-formula">
+                        Apply an operation to begin
+                    </div>
+
+                    <p id="math-explanation">
+                        The mathematical explanation will appear here.
+                    </p>
+
+                    <div class="matrix-card">
+                        <div class="matrix-card-title">TRANSFORMATION</div>
+                        <pre id="matrix-display">Waiting for operation…</pre>
+                    </div>
+
+                    <div class="comparison-heading">
+                        <div class="matrix-card-title">PIXEL MATRIX SAMPLE</div>
+                        <p>Top-left 4×4 sample · red channel</p>
+                    </div>
+
+                    <div class="matrix-comparison">
+                        <div class="matrix-sample">
+                            <div class="matrix-card-title">OLD · A_old</div>
+                            <div class="matrix-grid" id="old-matrix"></div>
+                        </div>
+
+                        <div class="matrix-arrow">→</div>
+
+                        <div class="matrix-sample">
+                            <div class="matrix-card-title">NEW · A_new</div>
+                            <div class="matrix-grid" id="new-matrix"></div>
+                        </div>
+                    </div>
+                </div>
+            </aside>
+        </section>
+    </main>
+
+    <script>
+        const fileInput = document.getElementById("image-input");
+        const dropZone = document.getElementById("drop-zone");
+        const imagePreview = document.getElementById("image-preview");
+        const canvasEmpty = document.getElementById("canvas-empty");
+        const imageInfo = document.getElementById("image-info");
+        const operationInfo = document.getElementById("operation-info");
+        const operationSelect = document.getElementById("operation");
+        const amountSlider = document.getElementById("amount");
+        const amountValue = document.getElementById("amount-value");
+        const brightnessControl = document.getElementById("brightness-control");
+        const applyButton = document.getElementById("apply-button");
+        const mathButton = document.getElementById("math-button");
+        const mathPanel = document.getElementById("math-panel");
+        const gridOverlay = document.getElementById("grid-overlay");
+        const message = document.getElementById("message");
+        const workbench = document.querySelector(".workbench");
+
+        let currentFile = null;
+        let currentName = "";
+
+        function chooseImage(file, name = file?.name) {
+            if (!file || !file.type.startsWith("image/")) {
+                message.textContent = "Please choose an image file.";
+                return;
+            }
+
+            currentFile = file;
+            currentName = name;
+
+            imagePreview.src = URL.createObjectURL(file);
+            imagePreview.hidden = false;
+            canvasEmpty.hidden = true;
+            
+            imageInfo.textContent = name;
+            operationInfo.textContent = "IMAGE LOADED";
+            applyButton.disabled = false;
+            mathButton.disabled = false;
+            message.textContent = "Choose an operation and apply it.";
+
+            document.querySelectorAll(".sample-item").forEach((item) => {
+                item.classList.toggle("selected", item.dataset.sample === name);
+            });
+        }
+
+        function showMatrix(elementId, values) {
+            const grid = document.getElementById(elementId);
+            grid.replaceChildren();
+
+            values.forEach((row) => {
+                row.forEach((value) => {
+                    const cell = document.createElement("span");
+                    cell.textContent = value;
+                    grid.appendChild(cell);
+                });
+            });
+        }
+
+        fileInput.addEventListener("change", (event) => {
+            chooseImage(event.target.files[0]);
+        });
+
+        dropZone.addEventListener("dragover", (event) => {
+            event.preventDefault();
+            dropZone.classList.add("dragging");
+        });
+
+        dropZone.addEventListener("dragleave", () => {
+            dropZone.classList.remove("dragging");
+        });
+
+        dropZone.addEventListener("drop", (event) => {
+            event.preventDefault();
+            dropZone.classList.remove("dragging");
+            chooseImage(event.dataTransfer.files[0]);
+        });
+
+        document.querySelectorAll(".sample-item").forEach((button) => {
+            button.addEventListener("click", async () => {
+                try {
+                    const filename = button.dataset.sample;
+                    const response = await fetch(
+                        `/samples/${encodeURIComponent(filename)}`
+                    );
+
+                    if (!response.ok) {
+                        throw new Error("Could not load that sample image.");
+                    }
+
+                    const blob = await response.blob();
+                    const file = new File([blob], filename, { type: blob.type });
+                    chooseImage(file, filename);
+                } catch (error) {
+                    message.textContent = error.message;
+                }
+            });
+        });
+
+        operationSelect.addEventListener("change", () => {
+            brightnessControl.hidden = operationSelect.value !== "brightness";
+        });
+
+        amountSlider.addEventListener("input", () => {
+            const value = Number(amountSlider.value);
+            amountValue.textContent = value > 0 ? `+${value}` : value;
+        });
+
+        async function applyOperation() {
+            if (!currentFile || applyButton.disabled) return;
+
+            const formData = new FormData();
+            formData.append("image", currentFile, currentName);
+            formData.append("operation", operationSelect.value);
+            formData.append("amount", amountSlider.value);
+
+            applyButton.disabled = true;
+            message.textContent = "Processing…";
+
+            try {
+                const response = await fetch("/process", {
+                    method: "POST",
+                    body: formData
+                });
+                const result = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(result.error || "Could not process the image.");
+                }
+
+                imagePreview.src = result.image;
+                operationInfo.textContent = result.math.name.toUpperCase();
+                message.textContent = "Transformation applied.";
+
+                document.getElementById("math-title").textContent = result.math.name;
+                document.getElementById("math-formula").textContent =
+                    result.math.formula;
+                document.getElementById("math-explanation").textContent =
+                    result.math.explanation;
+                document.getElementById("matrix-display").textContent =
+                    result.matrix;
+                document.getElementById("math-operation").textContent =
+                    result.math.name.toUpperCase();
+
+                showMatrix("old-matrix", result.old_matrix);
+                showMatrix("new-matrix", result.new_matrix);
+            } catch (error) {
+                message.textContent = error.message;
+            } finally {
+                applyButton.disabled = false;
+            }
+        }
+
+        applyButton.addEventListener("click", applyOperation);
+
+        [operationSelect, amountSlider].forEach((element) => {
+            element.addEventListener("keydown", (event) => {
+                if (event.key === "Enter" && !applyButton.disabled) {
+                    event.preventDefault();
+                    applyOperation();
+                }
+            });
+        });
+
+        mathButton.addEventListener("click", () => {
+            mathPanel.classList.add("open");
+            workbench.classList.add("math-open");
+            gridOverlay.classList.add("visible");
+        });
+
+        document.getElementById("close-math").addEventListener("click", () => {
+            mathPanel.classList.remove("open");
+            workbench.classList.remove("math-open");
+            gridOverlay.classList.remove("visible");
+        });
+    </script>
+</body>
+</html>
