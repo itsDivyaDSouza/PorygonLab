@@ -55,30 +55,36 @@
                     {% endfor %}
                 </div>
 
-                <label class="field-label" for="operation">
-                    Choose a transformation
-                </label>
-                <select id="operation">
-                    <option value="brightness">Brightness</option>
-                    <option value="grayscale">Grayscale</option>
-                    <option value="invert">Invert</option>
-                    <option value="sepia">Sepia</option>
-                    <option value="rotate">Rotate 90°</option>
-                    <option value="flip_horizontal">Flip horizontal</option>
-                    <option value="flip_vertical">Flip vertical</option>
-                </select>
+                <div class="field-label">Choose one or more transformations</div>
+                <div class="operation-options" id="operation-options">
+                    <label><input type="checkbox" name="operations" value="brightness"> Brightness</label>
+                    <label><input type="checkbox" name="operations" value="grayscale"> Grayscale</label>
+                    <label><input type="checkbox" name="operations" value="invert"> Invert</label>
+                    <label><input type="checkbox" name="operations" value="rotate" id="rotate-checkbox"> Rotate 90°</label>
+                    <div class="rotation-control" id="rotation-control" hidden>
+                        <label for="rotation-direction">Rotation direction</label>
+                        <select id="rotation-direction">
+                            <option value="clockwise">Clockwise</option>
+                            <option value="counterclockwise">Anticlockwise</option>
+                        </select>
+                    </div>
+                    <label><input type="checkbox" name="operations" value="flip_horizontal"> Flip horizontal</label>
+                    <label><input type="checkbox" name="operations" value="flip_vertical"> Flip vertical</label>
+                </div>
 
-                <div class="brightness-control" id="brightness-control">
+                <div class="brightness-control" id="brightness-control" hidden>
                     <label class="field-label" for="amount">
                         Brightness <span id="amount-value">+30</span>
                     </label>
                     <input id="amount" type="range" min="-100" max="100" value="30">
                 </div>
 
-                <button class="apply-button" id="apply-button" type="button" disabled>
-                    APPLY <span>→</span>
-                </button>
-                <p class="message" id="message">Choose an image to begin.</p>
+                <div class="action-buttons">
+                    <button class="apply-button" id="apply-button" type="button" disabled>
+                        APPLY <span>→</span>
+                    </button>
+                    <button class="reset-button" id="reset-button" type="button" disabled>RESET ↺</button>
+                </div>
             </aside>
 
             <section class="canvas-panel">
@@ -118,51 +124,15 @@
             <aside class="math-panel" id="math-panel">
                 <div class="math-header">
                     <div>
-                        <div class="section-label">MATH VIEW</div>
-                        <h2 id="math-title">Operation details</h2>
+                        <div class="section-label">MATH ANALYSIS</div>
+                        <h2 id="math-title">See what changed</h2>
                     </div>
-                    <button
-                        id="close-math"
-                        class="close-button"
-                        type="button"
-                        aria-label="Close math view"
-                    >×</button>
+                    <button id="close-math" class="close-button" type="button" aria-label="Close math view">×</button>
                 </div>
 
-                <div class="math-body">
-                    <span class="math-chip" id="math-operation">MATRIX OPERATION</span>
-
-                    <div class="formula" id="math-formula">
-                        Apply an operation to begin
-                    </div>
-
-                    <p id="math-explanation">
-                        The mathematical explanation will appear here.
-                    </p>
-
-                    <div class="matrix-card">
-                        <div class="matrix-card-title">TRANSFORMATION</div>
-                        <pre id="matrix-display">Waiting for operation…</pre>
-                    </div>
-
-                    <div class="comparison-heading">
-                        <div class="matrix-card-title">PIXEL MATRIX SAMPLE</div>
-                        <p>Top-left 4×4 sample · red channel</p>
-                    </div>
-
-                    <div class="matrix-comparison">
-                        <div class="matrix-sample">
-                            <div class="matrix-card-title">OLD · A_old</div>
-                            <div class="matrix-grid" id="old-matrix"></div>
-                        </div>
-
-                        <div class="matrix-arrow">→</div>
-
-                        <div class="matrix-sample">
-                            <div class="matrix-card-title">NEW · A_new</div>
-                            <div class="matrix-grid" id="new-matrix"></div>
-                        </div>
-                    </div>
+                <div class="math-body" id="math-body">
+                    <div class="math-empty" id="math-empty">Your transformation breakdown will appear here.</div>
+                    <div class="math-steps" id="math-steps"></div>
                 </div>
             </aside>
         </section>
@@ -175,69 +145,177 @@
         const canvasEmpty = document.getElementById("canvas-empty");
         const imageInfo = document.getElementById("image-info");
         const operationInfo = document.getElementById("operation-info");
-        const operationSelect = document.getElementById("operation");
+        const operationCheckboxes = [...document.querySelectorAll('input[name="operations"]')];
         const amountSlider = document.getElementById("amount");
         const amountValue = document.getElementById("amount-value");
         const brightnessControl = document.getElementById("brightness-control");
+        const rotationControl = document.getElementById("rotation-control");
+        const rotationCheckbox = document.getElementById("rotate-checkbox");
+        const rotationDirection = document.getElementById("rotation-direction");
         const applyButton = document.getElementById("apply-button");
+        const resetButton = document.getElementById("reset-button");
         const mathButton = document.getElementById("math-button");
         const mathPanel = document.getElementById("math-panel");
         const gridOverlay = document.getElementById("grid-overlay");
-        const message = document.getElementById("message");
         const workbench = document.querySelector(".workbench");
 
+        let originalFile = null;
+        let originalName = "";
         let currentFile = null;
         let currentName = "";
 
         function chooseImage(file, name = file?.name) {
-            if (!file || !file.type.startsWith("image/")) {
-                message.textContent = "Please choose an image file.";
-                return;
-            }
+            if (!file || !file.type.startsWith("image/")) return;
 
+            originalFile = file;
+            originalName = name;
             currentFile = file;
             currentName = name;
-
             imagePreview.src = URL.createObjectURL(file);
             imagePreview.hidden = false;
             canvasEmpty.hidden = true;
-            
             imageInfo.textContent = name;
             operationInfo.textContent = "IMAGE LOADED";
             applyButton.disabled = false;
+            resetButton.disabled = false;
             mathButton.disabled = false;
-            message.textContent = "Choose an operation and apply it.";
+            operationCheckboxes.forEach((checkbox) => { checkbox.checked = false; });
+            updateBrightnessVisibility();
+            updateRotationVisibility();
+            clearMathAnalysis();
 
             document.querySelectorAll(".sample-item").forEach((item) => {
                 item.classList.toggle("selected", item.dataset.sample === name);
             });
         }
 
-        function showMatrix(elementId, values) {
-            const grid = document.getElementById(elementId);
-            grid.replaceChildren();
+        function clearMathAnalysis() {
+            document.getElementById("math-steps").replaceChildren();
+            document.getElementById("math-empty").hidden = false;
+            document.getElementById("math-title").textContent = "See what changed";
+        }
 
-            values.forEach((row) => {
-                row.forEach((value) => {
-                    const cell = document.createElement("span");
-                    cell.textContent = value;
-                    grid.appendChild(cell);
-                });
+        function resetImage() {
+            if (!originalFile) return;
+
+            currentFile = originalFile;
+            currentName = originalName;
+            imagePreview.src = URL.createObjectURL(originalFile);
+            imagePreview.hidden = false;
+            canvasEmpty.hidden = true;
+            imageInfo.textContent = originalName;
+            operationInfo.textContent = "RESET TO ORIGINAL";
+            operationCheckboxes.forEach((checkbox) => { checkbox.checked = false; });
+            amountSlider.value = "30";
+            amountValue.textContent = "+30";
+            updateBrightnessVisibility();
+            updateRotationVisibility();
+            clearMathAnalysis();
+            mathPanel.classList.remove("open");
+            mathButton.hidden = false;
+            workbench.classList.remove("math-open");
+            gridOverlay.classList.remove("visible");
+        }
+
+        function rgbSwatch(values) {
+            const swatch = document.createElement("div");
+            swatch.className = "pixel-swatch";
+            swatch.style.backgroundColor = `rgb(${values.join(",")})`;
+            swatch.innerHTML = `<span>${values.join(", ")}</span>`;
+            return swatch;
+        }
+
+        function renderMathSteps(steps) {
+            const container = document.getElementById("math-steps");
+            const empty = document.getElementById("math-empty");
+            container.replaceChildren();
+            empty.hidden = steps.length > 0;
+
+            steps.forEach((step, index) => {
+                const card = document.createElement("article");
+                card.className = "math-step-card";
+
+                const heading = document.createElement("div");
+                heading.className = "math-step-heading";
+                heading.innerHTML = `<span class="step-number">${index + 1}</span><div><span class="step-kicker">TRANSFORMATION ${index + 1}</span><h3></h3></div>`;
+                heading.querySelector("h3").textContent = step.name;
+                card.appendChild(heading);
+
+                const formulaLabel = document.createElement("div");
+                formulaLabel.className = "math-small-label";
+                formulaLabel.textContent = "FORMULA";
+                card.appendChild(formulaLabel);
+                const formula = document.createElement("div");
+                formula.className = "formula-box";
+                formula.textContent = step.formula;
+                card.appendChild(formula);
+
+                const calcLabel = document.createElement("div");
+                calcLabel.className = "math-small-label";
+                calcLabel.textContent = "PUTTING IN THE VALUES";
+                card.appendChild(calcLabel);
+                const calculation = document.createElement("pre");
+                calculation.className = "calculation-box";
+                calculation.textContent = step.calculation;
+                card.appendChild(calculation);
+
+                const pixels = document.createElement("div");
+                pixels.className = "pixel-comparison";
+                const oldBlock = document.createElement("div");
+                oldBlock.className = "pixel-block";
+                const oldLabel = document.createElement("span");
+                oldLabel.className = "math-small-label";
+                oldLabel.textContent = step.position_transform ? "INPUT POSITION (x, y)" : "INPUT PIXEL (RGB)";
+                oldBlock.appendChild(oldLabel);
+                if (step.position_transform) {
+                    const oldPosition = document.createElement("div");
+                    oldPosition.className = "position-value";
+                    oldPosition.textContent = step.old_position;
+                    oldBlock.appendChild(oldPosition);
+                } else {
+                    oldBlock.appendChild(rgbSwatch(step.old_pixel));
+                }
+                const arrow = document.createElement("div");
+                arrow.className = "pixel-arrow";
+                arrow.textContent = "→";
+                const newBlock = document.createElement("div");
+                newBlock.className = "pixel-block";
+                const newLabel = document.createElement("span");
+                newLabel.className = "math-small-label";
+                newLabel.textContent = step.position_transform ? "OUTPUT POSITION (x′, y′)" : "OUTPUT PIXEL (RGB)";
+                newBlock.appendChild(newLabel);
+                if (step.position_transform) {
+                    const newPosition = document.createElement("div");
+                    newPosition.className = "position-value";
+                    newPosition.textContent = step.new_position;
+                    newBlock.appendChild(newPosition);
+                } else {
+                    newBlock.appendChild(rgbSwatch(step.new_pixel));
+                }
+                pixels.append(oldBlock, arrow, newBlock);
+                card.appendChild(pixels);
+
+                const note = document.createElement("p");
+                note.className = "math-note";
+                note.textContent = step.explanation;
+                card.appendChild(note);
+
+                const size = document.createElement("div");
+                size.className = "dimension-note";
+                size.textContent = `Image dimensions: ${step.before_size} → ${step.after_size}`;
+                card.appendChild(size);
+                container.appendChild(card);
             });
         }
 
-        fileInput.addEventListener("change", (event) => {
-            chooseImage(event.target.files[0]);
-        });
+        fileInput.addEventListener("change", (event) => chooseImage(event.target.files[0]));
 
         dropZone.addEventListener("dragover", (event) => {
             event.preventDefault();
             dropZone.classList.add("dragging");
         });
 
-        dropZone.addEventListener("dragleave", () => {
-            dropZone.classList.remove("dragging");
-        });
+        dropZone.addEventListener("dragleave", () => dropZone.classList.remove("dragging"));
 
         dropZone.addEventListener("drop", (event) => {
             event.preventDefault();
@@ -249,26 +327,31 @@
             button.addEventListener("click", async () => {
                 try {
                     const filename = button.dataset.sample;
-                    const response = await fetch(
-                        `/samples/${encodeURIComponent(filename)}`
-                    );
-
-                    if (!response.ok) {
-                        throw new Error("Could not load that sample image.");
-                    }
-
+                    const response = await fetch(`/samples/${encodeURIComponent(filename)}`);
+                    if (!response.ok) throw new Error("Could not load that sample image.");
                     const blob = await response.blob();
-                    const file = new File([blob], filename, { type: blob.type });
-                    chooseImage(file, filename);
+                    chooseImage(new File([blob], filename, { type: blob.type }), filename);
                 } catch (error) {
-                    message.textContent = error.message;
                 }
             });
         });
 
-        operationSelect.addEventListener("change", () => {
-            brightnessControl.hidden = operationSelect.value !== "brightness";
+        function updateBrightnessVisibility() {
+            brightnessControl.hidden = !operationCheckboxes.some(
+                (checkbox) => checkbox.checked && checkbox.value === "brightness"
+            );
+        }
+
+        operationCheckboxes.forEach((checkbox) => {
+            checkbox.addEventListener("change", () => {
+                updateBrightnessVisibility();
+                updateRotationVisibility();
+            });
         });
+
+        function updateRotationVisibility() {
+            rotationControl.hidden = !rotationCheckbox.checked;
+        }
 
         amountSlider.addEventListener("input", () => {
             const value = Number(amountSlider.value);
@@ -278,67 +361,63 @@
         async function applyOperation() {
             if (!currentFile || applyButton.disabled) return;
 
+            const selectedOperations = operationCheckboxes
+                .filter((checkbox) => checkbox.checked)
+                .map((checkbox) => checkbox.value);
+
+            if (selectedOperations.length === 0) {
+                return;
+            }
+
             const formData = new FormData();
             formData.append("image", currentFile, currentName);
-            formData.append("operation", operationSelect.value);
+            selectedOperations.forEach((operation) => formData.append("operations", operation));
             formData.append("amount", amountSlider.value);
+            formData.append("rotation_direction", rotationDirection.value);
 
             applyButton.disabled = true;
-            message.textContent = "Processing…";
 
             try {
-                const response = await fetch("/process", {
-                    method: "POST",
-                    body: formData
-                });
+                const response = await fetch("/process", { method: "POST", body: formData });
                 const result = await response.json();
-
-                if (!response.ok) {
-                    throw new Error(result.error || "Could not process the image.");
-                }
+                if (!response.ok) throw new Error(result.error || "Could not process the image.");
 
                 imagePreview.src = result.image;
-                operationInfo.textContent = result.math.name.toUpperCase();
-                message.textContent = "Transformation applied.";
+                const outputBlob = await (await fetch(result.image)).blob();
+                currentFile = new File([outputBlob], currentName || "transformed.png", { type: "image/png" });
+                operationInfo.textContent = result.steps.map((item) => item.name.toUpperCase()).join(" + ");
 
-                document.getElementById("math-title").textContent = result.math.name;
-                document.getElementById("math-formula").textContent =
-                    result.math.formula;
-                document.getElementById("math-explanation").textContent =
-                    result.math.explanation;
-                document.getElementById("matrix-display").textContent =
-                    result.matrix;
-                document.getElementById("math-operation").textContent =
-                    result.math.name.toUpperCase();
-
-                showMatrix("old-matrix", result.old_matrix);
-                showMatrix("new-matrix", result.new_matrix);
+                document.getElementById("math-title").textContent = result.steps.length === 1
+                    ? `${result.steps[0].name}: step by step`
+                    : `${result.steps.length} transformations explained`;
+                renderMathSteps(result.steps);
+                imageInfo.textContent = `${result.width} × ${result.height}`;
             } catch (error) {
-                message.textContent = error.message;
             } finally {
                 applyButton.disabled = false;
             }
         }
 
         applyButton.addEventListener("click", applyOperation);
+        resetButton.addEventListener("click", resetImage);
 
-        [operationSelect, amountSlider].forEach((element) => {
-            element.addEventListener("keydown", (event) => {
-                if (event.key === "Enter" && !applyButton.disabled) {
-                    event.preventDefault();
-                    applyOperation();
-                }
-            });
+        amountSlider.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" && !applyButton.disabled) {
+                event.preventDefault();
+                applyOperation();
+            }
         });
 
         mathButton.addEventListener("click", () => {
             mathPanel.classList.add("open");
+            mathButton.hidden = true;
             workbench.classList.add("math-open");
             gridOverlay.classList.add("visible");
         });
 
         document.getElementById("close-math").addEventListener("click", () => {
             mathPanel.classList.remove("open");
+            mathButton.hidden = false;
             workbench.classList.remove("math-open");
             gridOverlay.classList.remove("visible");
         });

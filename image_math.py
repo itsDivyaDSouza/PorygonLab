@@ -28,21 +28,21 @@ def grayscale(pixels):
 def invert(pixels):
     return 255-pixels
 
-def sepia(pixels):
-    sepia_matrix = np.array([
-        [0.393, 0.769, 0.189],
-        [0.349, 0.686, 0.168],
-        [0.272, 0.534, 0.131]
-    ])
-
-    sepia = pixels @ sepia_matrix.T
-    return np.clip(sepia, 0, 255)
-
 def rotate(pixels, degrees):
     if degrees not in (90, 180, 270):
-        raise ValueError(" it shud be in 90, 180 or 270 degrees")
+        raise ValueError("Rotation must be 90, 180 or 270 degrees")
 
-    return np.rot90(pixels, k=degrees // 90, axes=(0,1))
+    result = pixels.copy()
+    for _ in range(degrees // 90):
+        height, width = result.shape[:2]
+        output = np.empty((width, height, result.shape[2]), dtype=result.dtype)
+        y_coords, x_coords = np.indices((height, width))
+        coordinates = np.vstack((x_coords.ravel(), y_coords.ravel(), np.ones(height * width, dtype=np.int32)))
+        matrix = np.array([[0, -1, height - 1], [1, 0, 0], [0, 0, 1]], dtype=np.int32)
+        transformed = matrix @ coordinates
+        output[transformed[1], transformed[0]] = result[y_coords, x_coords]
+        result = output
+    return result
 
 def flip(pixels, direction):
 
@@ -71,9 +71,8 @@ for index, image_path in enumerate(sample_images, start=1):
         print("1. Brightness")
         print("2. Grayscale")
         print("3. Invert")
-        print("4. Sepia")
-        print("5. Rotate")
-        print("6. Flip")
+        print("4. Rotate")
+        print("5. Flip")
 
         operation = input("Enter an operation number: ")
 
@@ -85,11 +84,9 @@ for index, image_path in enumerate(sample_images, start=1):
         elif operation == "3":
             result = invert(original)
         elif operation == "4":
-            result = sepia(original)
-        elif operation == "5":
             degrees = int(input("Rotate by 90, 180, or 270 degrees: "))
             result = rotate(original, degrees)
-        elif operation == "6":
+        elif operation == "5":
             direction = input("Flip horizontally or vertically? ").lower()
             result = flip(original, direction)
         else:

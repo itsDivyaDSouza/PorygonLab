@@ -16,6 +16,7 @@
 body {
     min-height: 100vh;
     margin: 0;
+    padding-bottom: 64px;
     overflow-x: hidden;
     background: var(--black);
     color: var(--white);
@@ -237,6 +238,29 @@ select:focus {
     border-color: #aaa;
 }
 
+.operation-options {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 7px;
+    padding: 10px;
+    border: 1px solid #444;
+    background: #111;
+}
+
+.operation-options label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--white);
+    font-size: 10px;
+    cursor: pointer;
+}
+
+.operation-options input[type="checkbox"] {
+    accent-color: var(--cyan);
+    margin: 0;
+}
+
 .brightness-control[hidden] {
     display: none;
 }
@@ -256,7 +280,8 @@ select:focus {
 }
 
 .apply-button,
-.math-button {
+.math-button,
+.reset-button {
     border: 1px solid #aaa;
     border-radius: 0;
     background: transparent;
@@ -265,23 +290,37 @@ select:focus {
     letter-spacing: 0.07em;
 }
 
-.apply-button {
-    width: 100%;
+.action-buttons {
+    display: flex;
+    gap: 8px;
     margin-top: 17px;
+}
+
+.apply-button {
+    flex: 1;
+    min-width: 0;
     padding: 11px 9px;
     display: flex;
     justify-content: space-between;
     font-size: 9px;
 }
 
+.reset-button {
+    padding: 11px 12px;
+    font-size: 9px;
+    white-space: nowrap;
+}
+
 .apply-button:hover:not(:disabled),
-.math-button:hover:not(:disabled) {
+.math-button:hover:not(:disabled),
+.reset-button:hover:not(:disabled) {
     background: #eee;
     color: #050505;
 }
 
 .apply-button:disabled,
-.math-button:disabled {
+.math-button:disabled,
+.reset-button:disabled {
     opacity: 0.4;
     cursor: not-allowed;
 }
@@ -291,6 +330,10 @@ select:focus {
     margin: 9px 0 0;
     color: var(--muted);
     font-size: 9px;
+}
+
+.message[hidden] {
+    display: none;
 }
 
 .canvas-panel {
@@ -469,7 +512,7 @@ select:focus {
 }
 
 .math-body {
-    padding-top: 19px;
+    padding-top: 8px;
 }
 
 .math-chip {
@@ -597,3 +640,182 @@ select:focus {
         flex-direction: column;
     }
 }
+.math-empty {
+    color: #a7a7a7;
+    font-size: 10px;
+    line-height: 1.8;
+}
+
+.math-empty {
+    margin-top: 18px;
+    padding: 15px;
+    border: 1px dashed #3a3a3a;
+    text-align: center;
+}
+
+.math-steps {
+    display: grid;
+    gap: 13px;
+    margin-top: 4px;
+}
+
+.math-empty[hidden] {
+    display: none;
+}
+
+.math-step-card {
+    min-width: 0;
+    padding: 14px;
+    border: 1px solid #303030;
+    background: linear-gradient(145deg, #111 0%, #090909 100%);
+}
+
+.math-step-heading {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 16px;
+}
+
+.step-number {
+    width: 29px;
+    height: 29px;
+    display: grid;
+    place-items: center;
+    border: 1px solid #668e87;
+    border-radius: 50%;
+    color: var(--cyan);
+    font-size: 11px;
+}
+
+.step-kicker,
+.math-small-label {
+    display: block;
+    color: #858585;
+    font-family: "DM Mono", monospace;
+    font-size: 8px;
+    letter-spacing: .1em;
+}
+
+.math-step-heading h3 {
+    margin: 4px 0 0;
+    font-size: 13px;
+    font-weight: 400;
+}
+
+.formula-box {
+    margin: 7px 0 14px;
+    padding: 10px;
+    border-left: 2px solid var(--cyan);
+    background: #141a19;
+    color: #e8fffb;
+    font: 11px/1.7 "DM Mono", monospace;
+    overflow-wrap: anywhere;
+}
+
+.calculation-box {
+    margin: 7px 0 14px;
+    padding: 10px;
+    border: 1px solid #282828;
+    background: #070707;
+    color: #ddd;
+    font: 10px/1.9 "DM Mono", monospace;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+
+.pixel-comparison {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 20px minmax(0, 1fr);
+    align-items: center;
+    gap: 6px;
+    margin-top: 5px;
+}
+
+.pixel-block {
+    min-width: 0;
+}
+
+.pixel-swatch {
+    min-height: 62px;
+    margin-top: 7px;
+    display: flex;
+    align-items: end;
+    justify-content: center;
+    padding: 5px;
+    border: 1px solid #555;
+    background-clip: padding-box;
+}
+
+.pixel-swatch span {
+    max-width: 100%;
+    padding: 3px 4px;
+    background: #000b;
+    color: #fff;
+    font: 9px "DM Mono", monospace;
+    overflow-wrap: anywhere;
+    text-align: center;
+}
+
+.pixel-arrow {
+    color: var(--cyan);
+    text-align: center;
+    font-size: 17px;
+}
+
+.math-note {
+    margin: 13px 0 0;
+    color: #b4b4b4;
+    font-size: 9px;
+    line-height: 1.8;
+}
+
+.dimension-note {
+    margin-top: 10px;
+    padding-top: 9px;
+    border-top: 1px solid #282828;
+    color: #777;
+    font: 8px/1.7 "DM Mono", monospace;
+}
+
+@media (max-width: 800px) {
+    .workbench.math-open {
+        grid-template-columns: 1fr;
+    }
+
+    .math-panel {
+        padding: 12px;
+    }
+}
+
+.position-value {
+    min-height: 52px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 8px 3px;
+    margin-top: 8px;
+    border: 1px solid var(--border, #393939);
+    background: rgba(190, 255, 239, 0.06);
+    color: #c6fff1;
+    font-family: "DM Mono", monospace;
+    font-size: clamp(0.62rem, 0.8vw, 0.78rem);
+    line-height: 1.2;
+    font-weight: 500;
+    letter-spacing: 0;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.rotation-control {
+    display: grid;
+    gap: 6px;
+    padding: 8px 10px 10px 27px;
+    border: 1px solid #333;
+    border-top: 0;
+    background: #0d0d0d;
+    color: var(--muted);
+    font-size: 10px;
+}
+.rotation-control[hidden] { display: none; }
+.rotation-control select { width: 100%; }
